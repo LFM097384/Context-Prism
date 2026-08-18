@@ -21,6 +21,7 @@ function makeContext(workspacePath = null) {
         return { path };
       },
     },
+    on() {},
   };
   return { ctx, tools };
 }
