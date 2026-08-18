@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0] - 2026-08-18
+
+- Add automatic session history / trajectory capture.
+- Add automatic project file incremental indexing.
+- Add automatic context injection before each LLM request.
+- Add `autoInject` / `autoIndexFiles` / `autoMaxTokens` / `autoReservedTokens` / `autoIndexIntervalMs` config.
+
 ## [0.2.0] - 2026-08-18
 
 - Add DSH workspace / project-level index storage (`.lce/index.db`).
