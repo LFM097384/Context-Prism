@@ -1,0 +1,8 @@
+# ContextPrism DSH plugin bundle patch.
+
+- insert:
+    - id: context-prism
+      name: 'context-prism-dsh-plugin'
+      config:
+        backend: 'auto'
+        defaultIndex: '.lce/index.db'
