@@ -1,6 +1,6 @@
 {
   "name": "context-prism-dsh-plugin",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "DSH plugin with an in-process JavaScript port of ContextPrism (Local Context Engine)",
   "type": "module",
