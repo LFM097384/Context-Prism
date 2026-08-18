@@ -1,0 +1,2 @@
+{"step": 1, "tool": "search_index", "input": "dynamic context window", "output": "found 3 chunks", "timestamp": 1700000300}
+{"step": 2, "tool": "assemble_context", "input": "query + preferences + retrieval", "output": "window ready", "timestamp": 1700000320}
