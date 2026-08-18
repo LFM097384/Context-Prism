@@ -8,6 +8,11 @@
     "url": "git+https://github.com/LFM097384/Context-Prism.git"
   },
   "homepage": "https://github.com/LFM097384/Context-Prism",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
   "type": "module",
   "main": "lib/index.js",
   "exports": {
