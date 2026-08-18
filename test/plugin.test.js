@@ -8,6 +8,7 @@ import { apply } from "../lib/index.js";
 
 function makeContext(workspacePath = null) {
   const tools = [];
+  const listeners = {};
   const ctx = {
     tools: {
       register(definition) {
@@ -21,9 +22,12 @@ function makeContext(workspacePath = null) {
         return { path };
       },
     },
-    on() {},
+    on(event, listener) {
+      if (!listeners[event]) listeners[event] = [];
+      listeners[event].push(listener);
+    },
   };
-  return { ctx, tools };
+  return { ctx, tools, listeners };
 }
 
 test("DSH plugin registers both tools", () => {
@@ -74,5 +78,36 @@ test("plugin uses workspace-level default index under .lce", async () => {
     exec,
   );
   assert.ok(result.output.includes("Tokens:"));
+  assert.ok(existsSync(join(dir, ".lce", "index.db")));
+});
+
+test("plugin auto-captures session and injects context before LLM step", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "lce-auto-"));
+  const { ctx, listeners } = makeContext(dir);
+  apply(ctx, { backend: "sqlite", defaultIndex: ".lce/index.db", autoIndexFiles: false });
+
+  const preStep = listeners["agent/pre-step"]?.[0];
+  assert.ok(preStep, "agent/pre-step listener should be registered");
+
+  const events = [
+    { seq: 1, type: "user/message", data: { message: { content: "How should I assemble a dynamic context window?" } }, time: Date.now() },
+    { seq: 2, type: "assistant/message", data: { message: { content: "Use retrieval and compression." } }, time: Date.now() },
+    { seq: 3, type: "tool/call", data: { name: "search_index", arguments: "{}" }, time: Date.now() },
+  ];
+  const agent = {
+    id: "auto-test-session",
+    session: {
+      id: "auto-test-session",
+      header: { cwd: dir },
+      events,
+    },
+  };
+  const decision = { kind: "enter", messages: [{ role: "user", content: "How should I assemble a dynamic context window?" }] };
+  const next = async () => decision;
+
+  const result = await preStep({ agent, signal: new AbortController().signal }, next);
+  assert.equal(result.kind, "enter");
+  assert.ok(result.messages.length >= 2);
+  assert.ok(JSON.stringify(result.messages).includes("ContextPrism auto-injected context"));
   assert.ok(existsSync(join(dir, ".lce", "index.db")));
 });
