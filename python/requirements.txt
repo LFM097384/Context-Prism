@@ -1,0 +1,4 @@
+# Local Context Engine is intentionally dependency-free for the testbed.
+# Optional future dependencies:
+# - numpy / sentence-transformers / chromadb / lancedb for dense RAG
+# - fastapi / uvicorn if you want the HTTP service skeleton

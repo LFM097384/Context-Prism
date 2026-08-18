@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "local-context-engine-lab"
+version = "0.2.0"
+description = "Testbed for a local RAG-driven dynamic context window engine"
+readme = "README.md"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+include = ["local_context_engine*"]

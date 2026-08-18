@@ -1,0 +1,21 @@
+# Node
+node_modules/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local ContextPrism runtime data
+/.lce/
+*.state.json
+*.db
+*.sqlite
+*.sqlite3
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
