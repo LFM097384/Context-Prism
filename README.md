@@ -29,6 +29,10 @@
 - **缓存与增量**
   - 检索 / 压缩结果 TTL+LRU 缓存
   - 文件增量 ingest，按 mtime + size 跳过未变更内容
+- **自动捕获 + 自动注入**
+  - 自动把当前会话历史、assistant 消息、tool call / tool result 写入项目索引
+  - 自动增量索引项目文件（默认 60s 内最多扫描一次）
+  - 在每次 LLM 请求前自动注入动态 context window，模型无需手动调用工具
 
 ## 目录
 
@@ -73,6 +77,11 @@ dsh plugin --profile web add github:LFM097384/Context-Prism
       config:
         backend: 'auto'
         defaultIndex: '.lce/index.db'
+        autoInject: true
+        autoIndexFiles: true
+        autoMaxTokens: 4000
+        autoReservedTokens: 800
+        autoIndexIntervalMs: 60000
 ```
 
 ## 工具
