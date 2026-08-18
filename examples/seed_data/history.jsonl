@@ -1,0 +1,2 @@
+{"role": "user", "content": "Can you help me build a local RAG prototype?", "timestamp": 1700000000, "session": "demo"}
+{"role": "assistant", "content": "Sure. I would start with a small BM25 index and add compression later.", "timestamp": 1700000010, "session": "demo"}
