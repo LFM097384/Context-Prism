@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { apply } from "../lib/index.js";
+import { LocalContextEngine } from "../engine/engine.js";
 
 function makeContext(workspacePath = null) {
   const tools = [];
@@ -37,6 +38,7 @@ test("DSH plugin registers both tools", () => {
   assert.deepEqual(names, [
     "context_prism_build",
     "context_prism_dashboard",
+    "context_prism_evaluate",
     "context_prism_ingest",
     "context_prism_status",
     "context_prism_summarize",
@@ -129,4 +131,42 @@ test("plugin generates standalone HTML dashboard", async () => {
   const result = await dashboard.execute({}, exec);
   assert.ok(result.path.endsWith(".lce/dashboard.html"));
   assert.ok(existsSync(result.path));
+});
+
+test("plugin runs A/B retrieval evaluation", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "lce-eval-"));
+  const { ctx, tools } = makeContext(dir);
+  apply(ctx, { backend: "json", defaultIndex: ".lce/index.json", autoIndexFiles: false });
+  const build = tools.find((tool) => tool.name === "context_prism_build");
+  const evaluate = tools.find((tool) => tool.name === "context_prism_evaluate");
+  assert.ok(evaluate);
+
+  const engine = new LocalContextEngine({ storagePath: join(dir, ".lce", "index.json"), backend: "json" });
+  engine.addText({
+    content: "User prefers concise Chinese and local RAG context windows.",
+    source: "pref.md",
+    kind: "preference",
+    priority: 10,
+  });
+  engine.addText({
+    content: "History: the user asked about dynamic context window assembly.",
+    source: "history.log",
+    kind: "history",
+  });
+  engine.save();
+
+  const exec = { agent: { session: { header: { cwd: dir } } } };
+  const result = await evaluate.execute(
+    {
+      queries: JSON.stringify([
+        { query: "dynamic context window", expected: "dynamic" },
+        { query: "user preference", expected: "preference" },
+      ]),
+      index: join(dir, ".lce", "index.json"),
+      backend: "json",
+    },
+    exec,
+  );
+  assert.ok(result.report.total === 2);
+  assert.ok(result.output.includes("hit rate"));
 });
