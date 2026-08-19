@@ -2,6 +2,8 @@
 
 **ContextPrism** 是一个面向 DeepSeek Harness (DSH) 的本地上下文引擎 / 动态 context window 插件。
 
+完整架构文档见：[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
 它会在调用任何 LLM 之前，对以下本地数据做 **retrieval / compression / prioritization**：
 
 - 无限历史（会话 / 对话）
