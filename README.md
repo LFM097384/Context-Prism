@@ -21,9 +21,12 @@
   - 纯 JS BM25 + Node 内置 SQLite FTS5
   - 不依赖 Python / WSL
 - **检索 / 压缩 / 优先级**
-  - 混合检索：BM25 + 时间衰减 + 来源权重 + 用户优先级
-  - 压缩：完整保留高优先级片段，超预算时 extractive compression + 截断
+  - 混合检索：BM25 + 本地语义向量（hash n-gram embedding）+ 时间衰减 + 来源权重 + 用户优先级
+  - 压缩：完整保留高优先级片段，超预算时 extractive compression / 可选 LLM 摘要 + 截断
   - 动态组装：`User Preferences → History → Trajectory → Code → Files`
+- **LLM 摘要（可选）**
+  - 配置 `llmSummarization: true` 后，压缩阶段会尝试用 DeepSeek 生成摘要
+  - 未配置 API key 时自动回退到本地 extractive 压缩
 - **DeepSeek / OpenAI 兼容**
   - 直接生成 `deepseek-chat` / `deepseek-reasoner` / OpenAI 兼容 payload
 - **缓存与增量**
@@ -82,6 +85,9 @@ dsh plugin --profile web add github:LFM097384/Context-Prism
         autoMaxTokens: 4000
         autoReservedTokens: 800
         autoIndexIntervalMs: 60000
+        llmSummarization: false
+        summarizationModel: 'deepseek-chat'
+        summaryMaxTokens: 200
 ```
 
 ## 工具
@@ -90,6 +96,8 @@ dsh plugin --profile web add github:LFM097384/Context-Prism
 | --- | --- |
 | `context_prism_build` | 在调用 LLM 前构建动态 context window |
 | `context_prism_ingest` | 把文件/目录/history/trajectory 灌入本地索引 |
+| `context_prism_status` | 查看当前项目索引状态（chunk 数量、类型、来源） |
+| `context_prism_summarize` | 用 LLM 或本地 extractive 方式总结文本 |
 
 ## 测试
 
