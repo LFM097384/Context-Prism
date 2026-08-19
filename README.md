@@ -29,6 +29,9 @@
   - 未配置 API key 时自动回退到本地 extractive 压缩
 - **DeepSeek / OpenAI 兼容**
   - 直接生成 `deepseek-chat` / `deepseek-reasoner` / OpenAI 兼容 payload
+- **可视化**
+  - `context_prism_dashboard` 生成独立 HTML 面板
+  - DSH Web 侧边栏底部新增 ContextPrism 按钮，点击打开 `/context-prism/dashboard` 实时面板
 - **缓存与增量**
   - 检索 / 压缩结果 TTL+LRU 缓存
   - 文件增量 ingest，按 mtime + size 跳过未变更内容
