@@ -34,7 +34,12 @@ test("DSH plugin registers both tools", () => {
   const { ctx, tools } = makeContext();
   apply(ctx, { backend: "json", defaultIndex: ".lce_test_index.json" });
   const names = tools.map((tool) => tool.name).sort();
-  assert.deepEqual(names, ["context_prism_build", "context_prism_ingest"]);
+  assert.deepEqual(names, [
+    "context_prism_build",
+    "context_prism_ingest",
+    "context_prism_status",
+    "context_prism_summarize",
+  ]);
 });
 
 test("DSH plugin context_prism_ingest and context_prism_build work in-process", async () => {
