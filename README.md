@@ -35,6 +35,7 @@
 - **自动捕获 + 自动注入**
   - 自动把当前会话历史、assistant 消息、tool call / tool result 写入项目索引
   - 自动增量索引项目文件（默认 60s 内最多扫描一次）
+  - 实时文件监听（`fs.watch` + 防抖重索引）
   - 在每次 LLM 请求前自动注入动态 context window，模型无需手动调用工具
 
 ## 目录
@@ -85,6 +86,8 @@ dsh plugin --profile web add github:LFM097384/Context-Prism
         autoMaxTokens: 4000
         autoReservedTokens: 800
         autoIndexIntervalMs: 60000
+        fileWatch: true
+        watchDebounceMs: 2000
         llmSummarization: false
         summarizationModel: 'deepseek-chat'
         summaryMaxTokens: 200
@@ -98,6 +101,7 @@ dsh plugin --profile web add github:LFM097384/Context-Prism
 | `context_prism_ingest` | 把文件/目录/history/trajectory 灌入本地索引 |
 | `context_prism_status` | 查看当前项目索引状态（chunk 数量、类型、来源） |
 | `context_prism_dashboard` | 生成并保存独立的 HTML 可视化面板到 `.lce/dashboard.html` |
+| `context_prism_evaluate` | 运行 A/B 检索评估（语义+BM25 vs BM25-only） |
 | `context_prism_summarize` | 用 LLM 或本地 extractive 方式总结文本 |
 
 ## 测试
