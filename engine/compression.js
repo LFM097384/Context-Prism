@@ -54,6 +54,46 @@ export function compressItems(items, budgetTokens, query = "", minChunkTokens = 
   return new CompressionResult({ packed, omittedCount: omittedIds.length, omittedTokens, omittedIds });
 }
 
+export async function compressItemsAsync(items, budgetTokens, query = "", { minChunkTokens = 24, summarizer = null } = {}) {
+  const ordered = [...items].sort((a, b) => b.score - a.score);
+  const packed = [];
+  const omittedIds = [];
+  let omittedTokens = 0;
+  let used = 0;
+
+  for (const item of ordered) {
+    const content = item.chunk.content;
+    const tokens = item.chunk.tokens || estimateTokens(content);
+    if (used + tokens <= budgetTokens) {
+      packed.push(new PackedItem({ item, content, tokens, compressed: false }));
+      used += tokens;
+      continue;
+    }
+
+    const remaining = budgetTokens - used;
+    if (remaining >= minChunkTokens) {
+      let compressed = "";
+      if (summarizer) {
+        compressed = await summarizer(content, remaining);
+      }
+      if (!compressed) {
+        [compressed] = compressChunkToFit(content, remaining, query);
+      }
+      const compressedTokens = estimateTokens(compressed);
+      if (compressedTokens > 0) {
+        packed.push(new PackedItem({ item, content: compressed, tokens: compressedTokens, compressed: true }));
+        used += compressedTokens;
+        continue;
+      }
+    }
+
+    omittedIds.push(item.chunk.id);
+    omittedTokens += tokens;
+  }
+
+  return new CompressionResult({ packed, omittedCount: omittedIds.length, omittedTokens, omittedIds });
+}
+
 export function compressChunkToFit(content, maxTokens, query = "") {
   if (maxTokens <= 0) return ["", 0];
   if (estimateTokens(content) <= maxTokens) return [content, estimateTokens(content)];
