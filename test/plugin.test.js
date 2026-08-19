@@ -36,6 +36,7 @@ test("DSH plugin registers both tools", () => {
   const names = tools.map((tool) => tool.name).sort();
   assert.deepEqual(names, [
     "context_prism_build",
+    "context_prism_dashboard",
     "context_prism_ingest",
     "context_prism_status",
     "context_prism_summarize",
@@ -115,4 +116,17 @@ test("plugin auto-captures session and injects context before LLM step", async (
   assert.ok(result.messages.length >= 2);
   assert.ok(JSON.stringify(result.messages).includes("ContextPrism auto-injected context"));
   assert.ok(existsSync(join(dir, ".lce", "index.db")));
+});
+
+test("plugin generates standalone HTML dashboard", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "lce-dash-"));
+  const { ctx, tools } = makeContext(dir);
+  apply(ctx, { backend: "sqlite", defaultIndex: ".lce/index.db", autoIndexFiles: false });
+  const dashboard = tools.find((tool) => tool.name === "context_prism_dashboard");
+  assert.ok(dashboard);
+
+  const exec = { agent: { session: { header: { cwd: dir } } } };
+  const result = await dashboard.execute({}, exec);
+  assert.ok(result.path.endsWith(".lce/dashboard.html"));
+  assert.ok(existsSync(result.path));
 });
