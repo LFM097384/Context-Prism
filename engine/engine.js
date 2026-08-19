@@ -4,7 +4,7 @@ import { closeSync, existsSync, mkdirSync, openSync, readFileSync, readdirSync, 
 import { dirname, extname, join, resolve } from "node:path";
 
 import { TTLCache } from "./cache.js";
-import { buildOmittedNote, compressItems } from "./compression.js";
+import { buildOmittedNote, compressItems, compressItemsAsync } from "./compression.js";
 import { LocalIndex } from "./index.js";
 import { SqliteIndex } from "./sqlite_index.js";
 import {
@@ -193,6 +193,83 @@ export class LocalContextEngine {
     let nonPrefResult = this.compressionCache.get(nonPrefKey);
     if (!nonPrefResult) {
       nonPrefResult = compressItems(nonPrefItems, remaining, query);
+      this.compressionCache.set(nonPrefKey, nonPrefResult);
+    }
+    omittedCount += nonPrefResult.omittedCount;
+    omittedTokens += nonPrefResult.omittedTokens;
+
+    const sections = [];
+    if (prefSection) sections.push(prefSection);
+    sections.push(...this._groupIntoSections(nonPrefResult));
+
+    const note = buildOmittedNote(omittedCount, omittedTokens);
+    if (note) {
+      const noteTokens = estimateTokens(note);
+      const usedAfterSections = sections.reduce((sum, section) => sum + section.tokens, 0);
+      if (usedAfterSections + noteTokens <= budget) {
+        sections.push(new ContextSection({ title: "Omitted Memory", content: note, tokens: noteTokens, compressed: true }));
+      }
+    }
+
+    const totalTokens = sections.reduce((sum, section) => sum + section.tokens, 0);
+    return new ContextWindow({
+      query,
+      sections,
+      maxTokens,
+      reservedOutputTokens,
+      tokenBudget: budget,
+      totalTokens,
+      omittedCount,
+      omittedTokens,
+    });
+  }
+
+  async buildContextAsync({
+    query,
+    maxTokens = 8000,
+    reservedOutputTokens = 1024,
+    retrievalConfig = null,
+    priorityConfig = null,
+    includePreferences = true,
+    summarizer = null,
+  } = {}) {
+    const budget = Math.max(0, maxTokens - reservedOutputTokens);
+    if (budget <= 0) throw new Error("maxTokens must be greater than reservedOutputTokens");
+
+    const retrievalKey = this._retrievalCacheKey(query, retrievalConfig);
+    let retrieved = this.retrievalCache.get(retrievalKey);
+    if (!retrieved) {
+      retrieved = retrieve(this.index, query, retrievalConfig);
+      this.retrievalCache.set(retrievalKey, retrieved);
+    }
+    const prioritized = prioritize(retrieved, priorityConfig);
+
+    let prefSection = null;
+    let omittedCount = 0;
+    let omittedTokens = 0;
+    if (includePreferences) {
+      const prefChunks = this.index.chunksByKind(SourceKind.PREFERENCE);
+      if (prefChunks.length > 0) {
+        const prefItems = prefChunks.map((chunk, i) => new RetrievedItem({ chunk, score: 10.0 - i * 0.001, reason: "always-include preference" }));
+        const prefKey = this._compressionCacheKey(query, budget, prefItems);
+        let prefResult = this.compressionCache.get(prefKey);
+        if (!prefResult) {
+          prefResult = await compressItemsAsync(prefItems, budget, query, { summarizer });
+          this.compressionCache.set(prefKey, prefResult);
+        }
+        prefSection = this._sectionFromResult("User Preferences", prefResult);
+        omittedCount += prefResult.omittedCount;
+        omittedTokens += prefResult.omittedTokens;
+      }
+    }
+
+    const used = prefSection ? prefSection.tokens : 0;
+    const remaining = Math.max(0, budget - used);
+    const nonPrefItems = prioritized.filter((item) => item.chunk.kind !== SourceKind.PREFERENCE);
+    const nonPrefKey = this._compressionCacheKey(query, remaining, nonPrefItems);
+    let nonPrefResult = this.compressionCache.get(nonPrefKey);
+    if (!nonPrefResult) {
+      nonPrefResult = await compressItemsAsync(nonPrefItems, remaining, query, { summarizer });
       this.compressionCache.set(nonPrefKey, nonPrefResult);
     }
     omittedCount += nonPrefResult.omittedCount;
