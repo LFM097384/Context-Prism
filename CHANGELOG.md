@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.7.0] - 2026-08-18
+
+- Add DSH Web client footer action that opens the ContextPrism dashboard.
+- Add host HTTP route `/context-prism/dashboard` serving the live HTML dashboard.
+
 ## [0.6.0] - 2026-08-18
 
 - Add real-time file watching with debounced re-index (`fileWatch` / `watchDebounceMs`).
