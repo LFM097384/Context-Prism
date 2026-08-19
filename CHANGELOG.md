@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.5.0] - 2026-08-18
+
+- Add standalone HTML dashboard generation (`context_prism_dashboard`).
+
 ## [0.4.0] - 2026-08-18
 
 - Add local semantic retrieval (hash n-gram embedding + cosine similarity).
