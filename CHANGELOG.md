@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.0] - 2026-08-18
+
+- Add real-time file watching with debounced re-index (`fileWatch` / `watchDebounceMs`).
+- Add A/B retrieval evaluation tool (`context_prism_evaluate`).
+
 ## [0.5.0] - 2026-08-18
 
 - Add standalone HTML dashboard generation (`context_prism_dashboard`).
