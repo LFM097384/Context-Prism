@@ -97,6 +97,7 @@ dsh plugin --profile web add github:LFM097384/Context-Prism
 | `context_prism_build` | 在调用 LLM 前构建动态 context window |
 | `context_prism_ingest` | 把文件/目录/history/trajectory 灌入本地索引 |
 | `context_prism_status` | 查看当前项目索引状态（chunk 数量、类型、来源） |
+| `context_prism_dashboard` | 生成并保存独立的 HTML 可视化面板到 `.lce/dashboard.html` |
 | `context_prism_summarize` | 用 LLM 或本地 extractive 方式总结文本 |
 
 ## 测试
