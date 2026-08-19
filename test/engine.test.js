@@ -10,6 +10,8 @@ import { LocalContextEngine } from "../engine/engine.js";
 import { Chunk, SourceKind, estimateTokens } from "../engine/models.js";
 import { compressItems } from "../engine/compression.js";
 import { toDeepSeekPayload } from "../engine/providers.js";
+import { cosineSimilarity, embedText } from "../engine/embedding.js";
+import { summarizeText } from "../engine/summarizer.js";
 
 test("estimateTokens counts CJK and English", () => {
   assert.equal(estimateTokens(""), 0);
@@ -132,4 +134,24 @@ test("incremental file ingest skips unchanged files", () => {
   result = engine.addFileIncremental({ path: filePath, statePath });
   assert.deepEqual(result, { added: 1, changed: 1, skipped: 0 });
   assert.equal(engine.index.size, 1);
+});
+
+test("embedding produces similar vectors for related text", () => {
+  const a = embedText("dynamic context window with local RAG");
+  const b = embedText("dynamic context window local RAG retrieval");
+  const c = embedText("the cat sat on the mat");
+  assert.ok(cosineSimilarity(a, b) > cosineSimilarity(a, c));
+});
+
+test("summarizeText falls back to extractive when no API key is available", async () => {
+  const originalKey = process.env.DEEPSEEK_API_KEY;
+  delete process.env.DEEPSEEK_API_KEY;
+  try {
+    const text = "First important fact. Second important fact. Third detail that is less important. ".repeat(20);
+    const summary = await summarizeText(text, { maxTokens: 60, enabled: true });
+    assert.ok(summary.length > 0);
+    assert.ok(estimateTokens(summary) <= 80);
+  } finally {
+    if (originalKey !== undefined) process.env.DEEPSEEK_API_KEY = originalKey;
+  }
 });
