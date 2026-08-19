@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0] - 2026-08-18
+
+- Add local semantic retrieval (hash n-gram embedding + cosine similarity).
+- Add optional LLM summarization with extractive fallback.
+- Add `context_prism_status` and `context_prism_summarize` tools.
+- Add `llmSummarization` / `summarizationModel` / `summaryMaxTokens` config.
+
 ## [0.3.0] - 2026-08-18
 
 - Add automatic session history / trajectory capture.
